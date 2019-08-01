@@ -1,0 +1,6 @@
+[submodule "quickdemo"]
+	path = quickdemo
+	url = https://github.com/grandprixgp/quickdemo
+[submodule "csgo-pug-setup"]
+	path = csgo-pug-setup
+	url = https://github.com/grandprixgp/csgo-pug-setup.git
