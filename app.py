@@ -1,33 +1,28 @@
-import time, threading, json, subprocess
+import os, time, importlib, threading, json, subprocess, glob
 from flask import Flask, escape, request
 
+util = importlib.import_module("util")
 app = Flask(__name__)
-
-'''
--mtime -7 (last 7 days)
--mtime -1 (last 24 hours)
--cmin -60 (last hour)
--cmin -300 (last 5 hours)
-
-Linux: find *.dem -mtime -1 -type f -size +40M -print
-Windows: powershell.exe Get-ChildItem -Path (Get-Item -Path \".\\\").FullName -Include *.dem -Recurse
-'''
 
 @app.route('/live')
 def live():
-    pass
+    demo_files = util.find_extension("dem", hours = 2)
+    return "<br>".join(demo_files)
 
 @app.route('/recent')
 def recent():
-    pass
+    demo_files = util.find_extension("dem", hours = 4)
+    return "<br>".join(demo_files)
 
 @app.route('/today')
 def today():
-    pass
+    demo_files = util.find_extension("dem", days = 1)
+    return "<br>".join(demo_files)
 
 @app.route('/week')
 def week():
-    pass
+    demo_files = util.find_extension("dem", weeks = 1)
+    return "<br>".join(demo_files)
 
 if __name__ == "__main__":
     app.run(debug=True)
