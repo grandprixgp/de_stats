@@ -1,6 +1,12 @@
 import os, time, importlib, threading, json, subprocess, glob
 from flask import Flask, escape, request
 
+from ctypes import *
+
+lib = cdll.LoadLibrary("quickdemo/build/release/module/quickdemo-windows-4.0-amd64.dll")
+#lib.Dump.argtypes = [c_char_p]
+#print(lib.Dump("yes"))
+
 util = importlib.import_module("util")
 app = Flask(__name__)
 
