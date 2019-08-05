@@ -1,12 +1,12 @@
-import os, time, importlib, threading, json, subprocess, glob
-from flask import Flask, escape, request
+import os, time, platform, importlib, threading, json, subprocess, glob
+from flask import Flask, escape, request, jsonify
 
 from ctypes import *
 
 class GoString(Structure):
     _fields_ = [("p", c_char_p), ("n", c_longlong)]
 
-go_library = cdll.LoadLibrary("quickdemo/build/release/quickdemo-windows-4.0-amd64.dll")
+go_library = cdll.LoadLibrary("quickdemo/build/quickdemo-windows.dll" if platform.uname()[0] == "Windows" else "quickdemo/build/quickdemo-linux-amd64.so")
 go_library.Dump.argtypes = [GoString]
 go_library.Dump.restype = c_char_p
 
@@ -18,31 +18,42 @@ def dump(demo_files):
     go_return = go_library.Dump(go_arg)
     return go_return.decode()
 
-@app.route('/live')
-def live():
+@app.route('/matches/', methods=['POST'])
+def matches():
     return app.response_class(
-        response=json.dumps(dump(util.find_extension("dem", hours = 2))),
+        response=dump(util.find_extension("dem", hours = request.get_json(cache = True)["hours"], days = request.get_json(cache = True)["days"], weeks = request.get_json(cache = True)["weeks"])),
+        status=200,
+        mimetype='application/json'
+    )
+    #return app.response_class(
+    #    response=dump(util.find_extension("dem", hours = 2)),
+    #    status=200,
+    #    mimetype='application/json'
+    #)
+
+@app.route('/recent')
+def recent():
+    return app.response_class(
+        response=dump(util.find_extension("dem", hours = 4)),
         status=200,
         mimetype='application/json'
     )
 
-@app.route('/recent')
-def recent():
-    demo_files = dump(util.find_extension("dem", hours = 4))
-    return "<br>".join(demo_files)
-
 @app.route('/today')
 def today():
-    demo_files = dump(util.find_extension("dem", days = 1))
-    return "<br>".join(demo_files)
+    return app.response_class(
+        response=dump(util.find_extension("dem", days = 1)),
+        status=200,
+        mimetype='application/json'
+    )
 
 @app.route('/week')
 def week():
     return app.response_class(
-        response=json.dumps(dump(util.find_extension("dem", weeks = 1))),
+        response=dump(util.find_extension("dem", weeks = 1)),
         status=200,
         mimetype='application/json'
     )
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='127.0.0.1', port='112')
