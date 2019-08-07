@@ -11,8 +11,6 @@ def find_extension(extension, minutes = 0, hours = 0, days = 0, weeks = 0):
             if (minutes or hours or days or weeks):
                 if (delta.within(file, minutes, hours, days, weeks)):
                     files.append(os.path.join(cwd(), file))
-            else:
-                files.append(os.path.join(cwd(), file))
     return files
 
 def find_timestamp(file):

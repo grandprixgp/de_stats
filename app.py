@@ -1,5 +1,7 @@
 import os, time, platform, importlib, threading, json, subprocess, glob
+from functools import wraps
 from flask import Flask, escape, request, jsonify
+from werkzeug.exceptions import HTTPException, BadRequest
 
 from ctypes import *
 
@@ -18,39 +20,25 @@ def dump(demo_files):
     go_return = go_library.Dump(go_arg)
     return go_return.decode()
 
-@app.route('/matches/', methods=['POST'])
+def validate_json(*keys):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kw):
+            if not request.json:
+                raise BadRequest
+            else:
+                if not all (key in request.get_json(cache = True) for key in keys):
+                    raise BadRequest
+                else:
+                    return func(*args, **kw)
+        return wrapper
+    return decorator
+
+@app.route('/matches', methods=['POST'])
+@validate_json("hours", "days", "weeks")
 def matches():
     return app.response_class(
-        response=dump(util.find_extension("dem", hours = request.get_json(cache = True)["hours"], days = request.get_json(cache = True)["days"], weeks = request.get_json(cache = True)["weeks"])),
-        status=200,
-        mimetype='application/json'
-    )
-    #return app.response_class(
-    #    response=dump(util.find_extension("dem", hours = 2)),
-    #    status=200,
-    #    mimetype='application/json'
-    #)
-
-@app.route('/recent')
-def recent():
-    return app.response_class(
-        response=dump(util.find_extension("dem", hours = 4)),
-        status=200,
-        mimetype='application/json'
-    )
-
-@app.route('/today')
-def today():
-    return app.response_class(
-        response=dump(util.find_extension("dem", days = 1)),
-        status=200,
-        mimetype='application/json'
-    )
-
-@app.route('/week')
-def week():
-    return app.response_class(
-        response=dump(util.find_extension("dem", weeks = 1)),
+        response=dump(util.find_extension("dem", hours = int(request.get_json()["hours"]), days = int(request.get_json()["days"]), weeks = int(request.get_json()["weeks"]))),
         status=200,
         mimetype='application/json'
     )
